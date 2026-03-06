@@ -58,6 +58,7 @@ docker-compose up
 | `WGUI_TABLE`                  | The default WireGuard table value settings                                                                                                                                                                                                                                          | `auto`                             |
 | `WGUI_CONFIG_FILE_PATH`       | The default WireGuard config file path used in global settings                                                                                                                                                                                                                      | `/etc/wireguard/wg0.conf`          |
 | `WGUI_LOG_LEVEL`              | The default log level. Possible values: `DEBUG`, `INFO`, `WARN`, `ERROR`, `OFF`                                                                                                                                                                                                     | `INFO`                             |
+| `WGUI_DOWN_ON_STOP`           | When `WGUI_MANAGE_START=true`, run `wg-quick down` on container stop. Set to `false` to keep the WireGuard device after container stop/restart; the next start will delete any existing device and recreate it with `wg-quick up`                                               | `true`                             |
 | `WG_CONF_TEMPLATE`            | The custom `wg.conf` config file template. Please refer to our [default template](https://github.com/ngoduykhanh/wireguard-ui/blob/master/templates/wg.conf)                                                                                                                        | N/A                                |
 | `EMAIL_FROM_ADDRESS`          | The sender email address                                                                                                                                                                                                                                                            | N/A                                |
 | `EMAIL_FROM_NAME`             | The sender name                                                                                                                                                                                                                                                                     | `WireGuard UI`                     |
@@ -197,6 +198,10 @@ Using `WGUI_MANAGE_START=true` can also replace the function of `wg-quick@wg0` s
 running the container with `restart: unless-stopped`. These settings can also pick up changes to Wireguard Config File
 Path, after restarting the container. Please make sure you have `--cap-add=NET_ADMIN` in your container config to make
 this feature work.
+
+If you want to keep the existing WireGuard device across container stop/restart, set `WGUI_DOWN_ON_STOP=false`.
+With this setting, startup will delete any existing interface with the configured name and recreate it with
+`wg-quick up`, so full interface settings are applied again.
 
 ## Build
 
