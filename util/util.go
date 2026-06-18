@@ -39,6 +39,11 @@ var qrCodeSettings = model.QRCodeSettings{
 
 // BuildClientConfig to create wireguard client config string
 func BuildClientConfig(client model.Client, server model.Server, setting model.GlobalSetting) string {
+	return BuildClientConfigWithEndpoint(client, server, setting, setting.EndpointAddress)
+}
+
+// BuildClientConfigWithEndpoint creates a client config using endpointAddress.
+func BuildClientConfigWithEndpoint(client model.Client, server model.Server, setting model.GlobalSetting, endpointAddress string) string {
 	// Interface section
 	clientAddress := fmt.Sprintf("Address = %s\n", strings.Join(client.AllocatedIPs, ","))
 	clientPrivateKey := fmt.Sprintf("PrivateKey = %s\n", client.PrivateKey)
@@ -60,7 +65,10 @@ func BuildClientConfig(client model.Client, server model.Server, setting model.G
 
 	peerAllowedIPs := fmt.Sprintf("AllowedIPs = %s\n", strings.Join(client.AllowedIPs, ","))
 
-	desiredHost := setting.EndpointAddress
+	desiredHost := strings.TrimSpace(endpointAddress)
+	if desiredHost == "" {
+		desiredHost = setting.EndpointAddress
+	}
 	desiredPort := server.Interface.ListenPort
 	if strings.Contains(desiredHost, ":") {
 		split := strings.Split(desiredHost, ":")
@@ -92,6 +100,11 @@ func BuildClientConfig(client model.Client, server model.Server, setting model.G
 		peerPersistentKeepalive
 
 	return strConfig
+}
+
+// BuildBackupClientConfig creates a backup client config using the global backup endpoint.
+func BuildBackupClientConfig(client model.Client, server model.Server, setting model.GlobalSetting) string {
+	return BuildClientConfigWithEndpoint(client, server, setting, setting.BackupEndpointAddress)
 }
 
 // ClientDefaultsFromEnv to read the default values for creating a new client from the environment or use sane defaults

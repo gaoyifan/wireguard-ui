@@ -45,6 +45,12 @@ Global Settings
                                 <input type="text" data-role="tagsinput" class="form-control" id="dns_servers" value="">
                             </div>
                             <div class="form-group">
+                                <label for="backup_endpoint_address">Backup Endpoint Address</label>
+                                <input type="text" class="form-control" id="backup_endpoint_address"
+                                    name="backup_endpoint_address" placeholder="Backup Endpoint Address"
+                                    value="{{ .globalSettings.BackupEndpointAddress }}">
+                            </div>
+                            <div class="form-group">
                                 <label for="mtu">MTU</label>
                                 <input type="text" class="form-control" id="mtu" name="mtu" placeholder="MTU"
                                     value="{{if .globalSettings.MTU}}{{ .globalSettings.MTU }}{{end}}">
@@ -96,21 +102,23 @@ Global Settings
                                 <strong>Suggest</strong> button to auto detect the public IP address of your server.</dd>
                             <dt>2. DNS Servers</dt>
                             <dd>The DNS servers will be set to client config.</dd>
-                            <dt>3. MTU</dt>
+                            <dt>3. Backup Endpoint Address</dt>
+                            <dd>The secondary endpoint used when generating backup client config files.</dd>
+                            <dt>4. MTU</dt>
                             <dd>The MTU will be set to server and client config. By default it is <code>1450</code>. You might want
                                 to adjust the MTU size if your connection (e.g PPPoE, 3G, satellite network, etc) has a low MTU.</dd>
                             <dd>Leave blank to omit this setting in the configs.</dd>
-                            <dt>4. Persistent Keepalive</dt>
+                            <dt>5. Persistent Keepalive</dt>
                             <dd>By default, WireGuard peers remain silent while they do not need to communicate,
                                 so peers located behind a NAT and/or firewall may be unreachable from other peers
                                 until they reach out to other peers themselves. Adding <code>PersistentKeepalive</code>
                                 can ensure that the connection remains open.</dd>
                             <dd>Leave blank to omit this setting in the Client config.</dd>
-                            <dt>5. Firewall Mark</dt>
+                            <dt>6. Firewall Mark</dt>
                             <dd>Add a matching <code>fwmark</code> on all packets going out of a WireGuard non-default-route tunnel. Default value: <code>0xca6c</code></dd>
-                            <dt>6. Table</dt>
+                            <dt>7. Table</dt>
                             <dd>Value for the <code>Table</code> setting in the wg conf file. Default value: <code>auto</code></dd>                            
-                            <dt>7. Wireguard Config File Path</dt>
+                            <dt>8. Wireguard Config File Path</dt>
                             <dd>The path of your Wireguard server config file. Please make sure the parent directory
                                 exists and is writable.</dd>
                         </dl>
@@ -154,13 +162,14 @@ Global Settings
     <script>
         function submitGlobalSettings() {
             const endpoint_address = $("#endpoint_address").val();
+            const backup_endpoint_address = $("#backup_endpoint_address").val();
             const dns_servers = $("#dns_servers").val().split(",");
             const mtu = $("#mtu").val();
             const persistent_keepalive = $("#persistent_keepalive").val();
             const firewall_mark = $("#firewall_mark").val();
             const table = $("#table").val();
             const config_file_path = $("#config_file_path").val();
-            const data = {"endpoint_address": endpoint_address, "dns_servers": dns_servers, "mtu": mtu, "persistent_keepalive": persistent_keepalive, "firewall_mark": firewall_mark, "table": table, "config_file_path": config_file_path};
+            const data = {"endpoint_address": endpoint_address, "backup_endpoint_address": backup_endpoint_address, "dns_servers": dns_servers, "mtu": mtu, "persistent_keepalive": persistent_keepalive, "firewall_mark": firewall_mark, "table": table, "config_file_path": config_file_path};
 
             $.ajax({
                 cache: false,

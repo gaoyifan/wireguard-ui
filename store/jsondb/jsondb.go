@@ -105,6 +105,7 @@ func (o *JsonDB) Init() error {
 
 		globalSetting := new(model.GlobalSetting)
 		globalSetting.EndpointAddress = endpointAddress
+		globalSetting.BackupEndpointAddress = util.LookupEnvOrString(util.BackupEndpointAddressEnvVar, util.DefaultBackupEndpointAddress)
 		globalSetting.DNSServers = util.LookupEnvOrStrings(util.DNSEnvVar, []string{util.DefaultDNS})
 		globalSetting.MTU = util.LookupEnvOrInt(util.MTUEnvVar, util.DefaultMTU)
 		globalSetting.PersistentKeepalive = util.LookupEnvOrInt(util.PersistentKeepaliveEnvVar, util.DefaultPersistentKeepalive)
@@ -236,7 +237,11 @@ func (o *JsonDB) DeleteUser(username string) error {
 // GetGlobalSettings func to query global settings from the database
 func (o *JsonDB) GetGlobalSettings() (model.GlobalSetting, error) {
 	settings := model.GlobalSetting{}
-	return settings, o.conn.Read("server", "global_settings", &settings)
+	err := o.conn.Read("server", "global_settings", &settings)
+	if settings.BackupEndpointAddress == "" {
+		settings.BackupEndpointAddress = util.LookupEnvOrString(util.BackupEndpointAddressEnvVar, util.DefaultBackupEndpointAddress)
+	}
+	return settings, err
 }
 
 // GetServer func to query Server settings from the database

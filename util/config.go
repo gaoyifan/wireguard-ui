@@ -42,6 +42,7 @@ const (
 	DefaultFirewallMark                    = "0xca6c" // i.e. 51820
 	DefaultTable                           = "auto"
 	DefaultConfigFilePath                  = "/etc/wireguard/wg0.conf"
+	DefaultBackupEndpointAddress           = "wg2.int.automesh.org"
 	UsernameEnvVar                         = "WGUI_USERNAME"
 	PasswordEnvVar                         = "WGUI_PASSWORD"
 	PasswordFileEnvVar                     = "WGUI_PASSWORD_FILE"
@@ -49,6 +50,7 @@ const (
 	PasswordHashFileEnvVar                 = "WGUI_PASSWORD_HASH_FILE"
 	FaviconFilePathEnvVar                  = "WGUI_FAVICON_FILE_PATH"
 	EndpointAddressEnvVar                  = "WGUI_ENDPOINT_ADDRESS"
+	BackupEndpointAddressEnvVar            = "WGUI_BACKUP_ENDPOINT_ADDRESS"
 	DNSEnvVar                              = "WGUI_DNS"
 	MTUEnvVar                              = "WGUI_MTU"
 	PersistentKeepaliveEnvVar              = "WGUI_PERSISTENT_KEEPALIVE"

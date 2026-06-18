@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"archive/zip"
+	"bytes"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
@@ -547,8 +549,10 @@ func EmailClient(db store.IStore, mailer emailer.Emailer, emailSubject, emailCon
 		server, _ := db.GetServer()
 		globalSettings, _ := db.GetGlobalSettings()
 		config := util.BuildClientConfig(*clientData.Client, server, globalSettings)
+		backupConfig := util.BuildBackupClientConfig(*clientData.Client, server, globalSettings)
 
-		cfgAtt := emailer.Attachment{Name: "wg0.conf", Data: []byte(config)}
+		cfgAtt := emailer.Attachment{Name: clientData.Client.Name + ".conf", Data: []byte(config)}
+		backupCfgAtt := emailer.Attachment{Name: clientData.Client.Name + "-backup.conf", Data: []byte(backupConfig)}
 		var attachments []emailer.Attachment
 		if clientData.Client.PrivateKey != "" {
 			qrdata, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(clientData.QRCode, "data:image/png;base64,"))
@@ -556,9 +560,9 @@ func EmailClient(db store.IStore, mailer emailer.Emailer, emailSubject, emailCon
 				return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, "decoding: " + err.Error()})
 			}
 			qrAtt := emailer.Attachment{Name: "wg.png", Data: qrdata}
-			attachments = []emailer.Attachment{cfgAtt, qrAtt}
+			attachments = []emailer.Attachment{cfgAtt, backupCfgAtt, qrAtt}
 		} else {
-			attachments = []emailer.Attachment{cfgAtt}
+			attachments = []emailer.Attachment{cfgAtt, backupCfgAtt}
 		}
 		err = mailer.Send(
 			clientData.Client.Name,
@@ -795,13 +799,30 @@ func DownloadClient(db store.IStore) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, err.Error()})
 		}
 		config := util.BuildClientConfig(*clientData.Client, server, globalSettings)
+		backupConfig := util.BuildBackupClientConfig(*clientData.Client, server, globalSettings)
 
-		// create io reader from string
-		reader := strings.NewReader(config)
+		var buffer bytes.Buffer
+		zw := zip.NewWriter(&buffer)
+		writeConfig := func(name, data string) error {
+			w, err := zw.Create(name)
+			if err != nil {
+				return err
+			}
+			_, err = w.Write([]byte(data))
+			return err
+		}
+		if err := writeConfig(clientData.Client.Name+".conf", config); err != nil {
+			return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, err.Error()})
+		}
+		if err := writeConfig(clientData.Client.Name+"-backup.conf", backupConfig); err != nil {
+			return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, err.Error()})
+		}
+		if err := zw.Close(); err != nil {
+			return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, err.Error()})
+		}
 
-		// set response header for downloading
-		c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf("attachment; filename=%s.conf", clientData.Client.Name))
-		return c.Stream(http.StatusOK, "text/conf", reader)
+		c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf("attachment; filename=%s.zip", clientData.Client.Name))
+		return c.Blob(http.StatusOK, "application/zip", buffer.Bytes())
 	}
 }
 
