@@ -51,7 +51,14 @@ function renderClientList(data) {
                             </div>
                             <div class="info-box-content" style="overflow: hidden">
                                 <div class="btn-group">
-                                    <a href="download?clientid=${obj.Client.id}" class="btn btn-outline-primary btn-sm">Download</a>
+                                    <button type="button" class="btn btn-outline-primary btn-sm">Download</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle dropdown-icon"
+                                        data-toggle="dropdown">
+                                    </button>
+                                    <div class="dropdown-menu" role="menu">
+                                        <a class="dropdown-item" href="download?clientid=${obj.Client.id}">Primary config</a>
+                                        <a class="dropdown-item" href="download?clientid=${obj.Client.id}&backup=true">Backup config</a>
+                                    </div>
                                 </div>
                                 <div class="btn-group">      
                                     <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal"

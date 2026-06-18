@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"archive/zip"
-	"bytes"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
@@ -799,30 +797,15 @@ func DownloadClient(db store.IStore) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, err.Error()})
 		}
 		config := util.BuildClientConfig(*clientData.Client, server, globalSettings)
-		backupConfig := util.BuildBackupClientConfig(*clientData.Client, server, globalSettings)
-
-		var buffer bytes.Buffer
-		zw := zip.NewWriter(&buffer)
-		writeConfig := func(name, data string) error {
-			w, err := zw.Create(name)
-			if err != nil {
-				return err
-			}
-			_, err = w.Write([]byte(data))
-			return err
-		}
-		if err := writeConfig(clientData.Client.Name+".conf", config); err != nil {
-			return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, err.Error()})
-		}
-		if err := writeConfig(clientData.Client.Name+"-backup.conf", backupConfig); err != nil {
-			return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, err.Error()})
-		}
-		if err := zw.Close(); err != nil {
-			return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, err.Error()})
+		filename := clientData.Client.Name + ".conf"
+		if c.QueryParam("backup") == "true" {
+			config = util.BuildBackupClientConfig(*clientData.Client, server, globalSettings)
+			filename = clientData.Client.Name + "-backup.conf"
 		}
 
-		c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf("attachment; filename=%s.zip", clientData.Client.Name))
-		return c.Blob(http.StatusOK, "application/zip", buffer.Bytes())
+		reader := strings.NewReader(config)
+		c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf("attachment; filename=%s", filename))
+		return c.Stream(http.StatusOK, "text/conf", reader)
 	}
 }
 
